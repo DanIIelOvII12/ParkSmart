@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema Inteligente de Gestión de Parqueaderos</title>
+
+  <!-- Google Fonts: Syne para titulos, DM Sans para cuerpo -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet" />
+
+  <!-- Hoja de estilos principal -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- =============================================
+       BARRA DE NAVEGACION SUPERIOR
+       Contiene el logo, menu principal y acciones
+  ============================================= -->
+  <header class="navbar" id="navbar">
+    <div class="navbar__inner">
+
+      <!-- Logo / nombre del sistema -->
+      <a href="#inicio" class="navbar__logo" aria-label="Inicio">
+        <span class="navbar__logo-icon" aria-hidden="true">P</span>
+        <span class="navbar__logo-text">ParkSmart</span>
+      </a>
+
+      <!-- Navegacion principal (escritorio) -->
+      <nav class="navbar__nav" aria-label="Navegacion principal">
+        <a href="#inicio"        class="navbar__link active" data-section="inicio">Inicio</a>
+        <a href="#disponibilidad" class="navbar__link" data-section="disponibilidad">Disponibilidad</a>
+        <a href="#reservas"      class="navbar__link" data-section="reservas">Mis Reservas</a>
+        <a href="#historial"     class="navbar__link" data-section="historial">Historial</a>
+        <a href="#admin"         class="navbar__link navbar__link--admin" data-section="admin">Panel Admin</a>
+      </nav>
+
+      <!-- Acciones del usuario -->
+      <div class="navbar__actions">
+        <!-- Indicador del usuario activo (se muestra tras el login) -->
+        <div class="user-badge" id="userBadge" hidden>
+          <span class="user-badge__name" id="userBadgeName">Usuario</span>
+          <button class="btn btn--ghost btn--sm" id="btnLogout">Salir</button>
+        </div>
+
+        <!-- Boton que abre el modal de autenticacion -->
+        <button class="btn btn--primary btn--sm" id="btnOpenAuth">Ingresar</button>
+
+        <!-- Boton hamburguesa para movil -->
+        <button class="navbar__hamburger" id="hamburger" aria-label="Abrir menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Menu movil desplegable -->
+    <nav class="navbar__mobile-menu" id="mobileMenu" aria-label="Menu movil" hidden>
+      <a href="#inicio"         class="navbar__mobile-link" data-section="inicio">Inicio</a>
+      <a href="#disponibilidad" class="navbar__mobile-link" data-section="disponibilidad">Disponibilidad</a>
+      <a href="#reservas"       class="navbar__mobile-link" data-section="reservas">Mis Reservas</a>
+      <a href="#historial"      class="navbar__mobile-link" data-section="historial">Historial</a>
+      <a href="#admin"          class="navbar__mobile-link" data-section="admin">Panel Admin</a>
+    </nav>
+  </header>
+
+  <!-- =============================================
+       CONTENIDO PRINCIPAL
+       Cada <section> representa una vista del SPA
+  ============================================= -->
+  <main id="main">
+
+    <!-- ----- SECCION: INICIO / HERO ----- -->
+    <section class="section section--hero" id="inicio" data-view="inicio">
+
+      <!-- Fondo decorativo animado -->
+      <div class="hero__bg" aria-hidden="true">
+        <div class="hero__blob hero__blob--1"></div>
+        <div class="hero__blob hero__blob--2"></div>
+        <div class="hero__grid"></div>
+      </div>
+
+      <div class="container hero__content">
+        <div class="hero__text">
+          <span class="hero__eyebrow">Sistema Inteligente</span>
+          <h1 class="hero__title">Gestiona tu parqueadero <em>en tiempo real</em></h1>
+          <p class="hero__desc">
+            Consulta disponibilidad, reserva tu espacio y controla el acceso de vehículos desde
+            cualquier dispositivo. Diseñado para centros comerciales, universidades y zonas empresariales.
+          </p>
+
+          <!-- Estadísticas rapidas -->
+          <div class="hero__stats">
+            <div class="stat">
+              <span class="stat__value" id="statDisponibles">12</span>
+              <span class="stat__label">Espacios libres</span>
+            </div>
+            <div class="stat">
+              <span class="stat__value" id="statOcupados">8</span>
+              <span class="stat__label">Ocupados</span>
+            </div>
+            <div class="stat">
+              <span class="stat__value" id="statReservados">4</span>
+              <span class="stat__label">Reservados</span>
+            </div>
+          </div>
+
+          <div class="hero__cta">
+            <button class="btn btn--primary btn--lg" id="btnVerMapa">
+              Ver mapa ahora
+            </button>
+            <button class="btn btn--outline btn--lg" id="btnReservar">
+              Reservar espacio
+            </button>
+          </div>
+        </div>
+
+        <!-- Miniatura del mapa en el hero -->
+        <div class="hero__preview" aria-label="Vista previa del parqueadero">
+          <div class="mini-map" id="heroMiniMap" role="img" aria-label="Mapa resumido del parqueadero"></div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ----- SECCION: DISPONIBILIDAD ----- -->
+    <section class="section section--map" id="disponibilidad" data-view="disponibilidad" hidden>
+      <div class="container">
+
+        <header class="section__header">
+          <h2 class="section__title">Disponibilidad en tiempo real</h2>
+          <p class="section__subtitle">
+            Selecciona un espacio disponible para ver su detalle o iniciar una reserva.
+          </p>
+        </header>
+
+        <!-- Leyenda de estados -->
+        <div class="legend" role="list" aria-label="Leyenda de estados">
+          <div class="legend__item" role="listitem">
+            <span class="legend__dot legend__dot--available"></span>
+            <span>Disponible</span>
+          </div>
+          <div class="legend__item" role="listitem">
+            <span class="legend__dot legend__dot--occupied"></span>
+            <span>Ocupado</span>
+          </div>
+          <div class="legend__item" role="listitem">
+            <span class="legend__dot legend__dot--reserved"></span>
+            <span>Reservado</span>
+          </div>
+        </div>
+
+        <!-- Filtros de zona -->
+        <div class="filter-bar" role="group" aria-label="Filtrar por zona">
+          <button class="filter-btn active" data-zone="all">Todas las zonas</button>
+          <button class="filter-btn" data-zone="A">Zona A</button>
+          <button class="filter-btn" data-zone="B">Zona B</button>
+          <button class="filter-btn" data-zone="C">Zona C</button>
+        </div>
+
+        <!-- Cuadricula de espacios de parqueo -->
+        <div class="parking-grid" id="parkingGrid" role="list" aria-label="Espacios de parqueo"></div>
+
+        <!-- Panel de detalle del espacio seleccionado -->
+        <aside class="space-detail" id="spaceDetail" hidden aria-live="polite">
+          <h3 class="space-detail__title">Espacio <span id="detailSpaceId">—</span></h3>
+
+          <dl class="space-detail__info">
+            <dt>Zona</dt>         <dd id="detailZone">—</dd>
+            <dt>Estado</dt>       <dd id="detailStatus">—</dd>
+            <dt>Tipo</dt>         <dd id="detailType">—</dd>
+          </dl>
+
+          <div class="space-detail__actions" id="detailActions"></div>
+        </aside>
+      </div>
+    </section>
+
+
+    <!-- ----- SECCION: MIS RESERVAS ----- -->
+    <section class="section section--reservas" id="reservas" data-view="reservas" hidden>
+      <div class="container">
+
+        <header class="section__header">
+          <h2 class="section__title">Mis reservas</h2>
+          <p class="section__subtitle">Gestiona tus reservas activas y proximas.</p>
+        </header>
+
+        <!-- Mensaje cuando no hay usuario autenticado -->
+        <div class="auth-wall" id="reservasAuthWall">
+          <p>Debes <button class="link-btn" id="btnLoginFromReservas">iniciar sesion</button> para ver tus reservas.</p>
+        </div>
+
+        <!-- Listado de reservas del usuario -->
+        <div id="reservasList" hidden>
+          <div class="reservas-list" id="reservasContainer" role="list" aria-label="Listado de reservas"></div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ----- SECCION: HISTORIAL ----- -->
+    <section class="section section--historial" id="historial" data-view="historial" hidden>
+      <div class="container">
+
+        <header class="section__header">
+          <h2 class="section__title">Historial de uso</h2>
+          <p class="section__subtitle">Registro de tus accesos y reservas anteriores.</p>
+        </header>
+
+        <div class="auth-wall" id="historialAuthWall">
+          <p>Debes <button class="link-btn" id="btnLoginFromHistorial">iniciar sesion</button> para ver tu historial.</p>
+        </div>
+
+        <div id="historialList" hidden>
+          <!-- Barra de busqueda / filtro de historial -->
+          <div class="historial-toolbar">
+            <input
+              class="input"
+              type="search"
+              id="historialSearch"
+              placeholder="Buscar por espacio o fecha..."
+              aria-label="Buscar historial"
+            />
+          </div>
+
+          <table class="data-table" id="historialTable" aria-label="Historial de accesos">
+            <thead>
+              <tr>
+                <th scope="col">Fecha</th>
+                <th scope="col">Espacio</th>
+                <th scope="col">Entrada</th>
+                <th scope="col">Salida</th>
+                <th scope="col">Duracion</th>
+                <th scope="col">Estado</th>
+              </tr>
+            </thead>
+            <tbody id="historialBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ----- SECCION: PANEL ADMINISTRADOR ----- -->
+    <section class="section section--admin" id="admin" data-view="admin" hidden>
+      <div class="container">
+
+        <header class="section__header">
+          <h2 class="section__title">Panel de administracion</h2>
+          <p class="section__subtitle">Gestiona espacios, usuarios y reportes del sistema.</p>
+        </header>
+
+        <!-- Proteccion: solo accesible para administradores -->
+        <div class="auth-wall" id="adminAuthWall">
+          <p>Esta seccion requiere privilegios de administrador.</p>
+          <button class="btn btn--primary" id="btnLoginFromAdmin">Acceder como admin</button>
+        </div>
+
+        <!-- Contenido del panel admin -->
+        <div id="adminContent" hidden>
+
+          <!-- Tarjetas de KPIs resumen -->
+          <div class="kpi-grid" id="kpiGrid" aria-label="Indicadores del sistema"></div>
+
+          <!-- Pestanas del panel -->
+          <div class="tabs" role="tablist" aria-label="Secciones del panel admin">
+            <button class="tab active" role="tab" data-tab="espacios"  aria-selected="true"  aria-controls="tabEspacios">Espacios</button>
+            <button class="tab"        role="tab" data-tab="usuarios"  aria-selected="false" aria-controls="tabUsuarios">Usuarios</button>
+            <button class="tab"        role="tab" data-tab="reportes"  aria-selected="false" aria-controls="tabReportes">Reportes</button>
+          </div>
+
+          <!-- Pestaña: Gestion de espacios -->
+          <div class="tab-panel active" id="tabEspacios" role="tabpanel" aria-labelledby="tab-espacios">
+            <div class="tab-panel__toolbar">
+              <h3>Espacios del parqueadero</h3>
+              <button class="btn btn--primary btn--sm" id="btnNuevoEspacio">+ Nuevo espacio</button>
+            </div>
+
+            <table class="data-table" id="adminEspaciosTable" aria-label="Tabla de espacios">
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Zona</th>
+                  <th scope="col">Tipo</th>
+                  <th scope="col">Estado</th>
+                  <th scope="col">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="adminEspaciosBody"></tbody>
+            </table>
+          </div>
+
+          <!-- Pestaña: Gestion de usuarios -->
+          <div class="tab-panel" id="tabUsuarios" role="tabpanel" aria-labelledby="tab-usuarios" hidden>
+            <div class="tab-panel__toolbar">
+              <h3>Usuarios registrados</h3>
+            </div>
+
+            <table class="data-table" id="adminUsuariosTable" aria-label="Tabla de usuarios">
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Nombre</th>
+                  <th scope="col">Correo</th>
+                  <th scope="col">Rol</th>
+                  <th scope="col">Estado</th>
+                  <th scope="col">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="adminUsuariosBody"></tbody>
+            </table>
+          </div>
+
+          <!-- Pestaña: Reportes de ocupacion -->
+          <div class="tab-panel" id="tabReportes" role="tabpanel" aria-labelledby="tab-reportes" hidden>
+            <div class="tab-panel__toolbar">
+              <h3>Reportes de ocupacion</h3>
+              <button class="btn btn--outline btn--sm" id="btnExportReporte">Exportar CSV</button>
+            </div>
+
+            <!-- Grafica de barras de ocupacion por hora -->
+            <div class="chart-wrapper" aria-label="Grafica de ocupacion por hora">
+              <canvas id="ocupacionChart" width="800" height="260"></canvas>
+            </div>
+
+            <!-- Tabla de resumen por zona -->
+            <table class="data-table" id="reporteTable" aria-label="Resumen de ocupacion por zona">
+              <thead>
+                <tr>
+                  <th scope="col">Zona</th>
+                  <th scope="col">Total espacios</th>
+                  <th scope="col">Promedio ocupacion</th>
+                  <th scope="col">Pico maximo</th>
+                </tr>
+              </thead>
+              <tbody id="reporteBody"></tbody>
+            </table>
+          </div>
+        </div><!-- /adminContent -->
+      </div>
+    </section>
+
+  </main><!-- /main -->
+
+
+  <!-- =============================================
+       MODAL DE AUTENTICACION
+       Permite registro e inicio de sesion
+  ============================================= -->
+  <div class="modal-overlay" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle" hidden>
+    <div class="modal">
+      <!-- Cabecera del modal -->
+      <div class="modal__header">
+        <h2 class="modal__title" id="authModalTitle">Ingresar al sistema</h2>
+        <button class="modal__close" id="btnCloseAuth" aria-label="Cerrar modal">&times;</button>
+      </div>
+
+      <!-- Pestanas: Login / Registro -->
+      <div class="auth-tabs" role="tablist" aria-label="Tipo de acceso">
+        <button class="auth-tab active" role="tab" data-auth="login"    aria-selected="true"  aria-controls="authLogin">Iniciar sesion</button>
+        <button class="auth-tab"        role="tab" data-auth="register" aria-selected="false" aria-controls="authRegister">Registrarse</button>
+      </div>
+
+      <!-- Formulario de inicio de sesion -->
+      <div class="auth-panel active" id="authLogin" role="tabpanel">
+        <div class="form-group">
+          <label class="label" for="loginEmail">Correo electronico</label>
+          <input class="input" type="email" id="loginEmail" placeholder="usuario@correo.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label class="label" for="loginPassword">Contrasena</label>
+          <input class="input" type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+        <p class="hint-text">Admin demo: admin@park.co / admin123</p>
+        <p class="hint-text">Usuario demo: user@park.co / user123</p>
+        <div class="form-error" id="loginError" role="alert" hidden></div>
+        <button class="btn btn--primary btn--full" id="btnLogin">Iniciar sesion</button>
+      </div>
+
+      <!-- Formulario de registro de nuevo usuario -->
+      <div class="auth-panel" id="authRegister" role="tabpanel" hidden>
+        <div class="form-group">
+          <label class="label" for="regNombre">Nombre completo</label>
+          <input class="input" type="text"  id="regNombre"   placeholder="Nombre Apellido" autocomplete="name" />
+        </div>
+        <div class="form-group">
+          <label class="label" for="regEmail">Correo electronico</label>
+          <input class="input" type="email" id="regEmail"    placeholder="usuario@correo.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label class="label" for="regTel">Numero de contacto</label>
+          <input class="input" type="tel"   id="regTel"      placeholder="300 000 0000" autocomplete="tel" />
+        </div>
+        <div class="form-group">
+          <label class="label" for="regPassword">Contrasena</label>
+          <input class="input" type="password" id="regPassword" placeholder="Minimo 8 caracteres" autocomplete="new-password" />
+        </div>
+        <div class="form-error" id="registerError" role="alert" hidden></div>
+        <button class="btn btn--primary btn--full" id="btnRegister">Crear cuenta</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- =============================================
+       MODAL DE RESERVA
+       Confirma la reserva de un espacio especifico
+  ============================================= -->
+  <div class="modal-overlay" id="reservaModal" role="dialog" aria-modal="true" aria-labelledby="reservaModalTitle" hidden>
+    <div class="modal">
+      <div class="modal__header">
+        <h2 class="modal__title" id="reservaModalTitle">Reservar espacio</h2>
+        <button class="modal__close" id="btnCloseReserva" aria-label="Cerrar modal">&times;</button>
+      </div>
+
+      <p>Espacio seleccionado: <strong id="reservaEspacioId">—</strong></p>
+      <p>Zona: <strong id="reservaZona">—</strong></p>
+
+      <div class="form-group">
+        <label class="label" for="reservaDuracion">Duracion de la reserva (horas)</label>
+        <input class="input" type="number" id="reservaDuracion" min="1" max="8" value="2" />
+      </div>
+      <div class="form-group">
+        <label class="label" for="reservaPlaca">Placa del vehiculo</label>
+        <input class="input" type="text" id="reservaPlaca" placeholder="ABC-123" maxlength="7" />
+      </div>
+
+      <div class="form-error" id="reservaError" role="alert" hidden></div>
+      <button class="btn btn--primary btn--full" id="btnConfirmarReserva">Confirmar reserva</button>
+    </div>
+  </div>
+
+
+  <!-- =============================================
+       MODAL GESTION DE ESPACIO (ADMIN)
+       Permite agregar o editar un espacio
+  ============================================= -->
+  <div class="modal-overlay" id="espacioModal" role="dialog" aria-modal="true" aria-labelledby="espacioModalTitle" hidden>
+    <div class="modal">
+      <div class="modal__header">
+        <h2 class="modal__title" id="espacioModalTitle">Gestion de espacio</h2>
+        <button class="modal__close" id="btnCloseEspacio" aria-label="Cerrar modal">&times;</button>
+      </div>
+
+      <input type="hidden" id="espacioEditId" />
+      <div class="form-group">
+        <label class="label" for="espacioNumero">Numero / ID del espacio</label>
+        <input class="input" type="text" id="espacioNumero" placeholder="Ej: A-05" />
+      </div>
+      <div class="form-group">
+        <label class="label" for="espacioZona">Zona</label>
+        <select class="input" id="espacioZona">
+          <option value="A">Zona A</option>
+          <option value="B">Zona B</option>
+          <option value="C">Zona C</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="label" for="espacioTipo">Tipo</label>
+        <select class="input" id="espacioTipo">
+          <option value="Estandar">Estandar</option>
+          <option value="Discapacitados">Discapacitados</option>
+          <option value="Motos">Motos</option>
+          <option value="VIP">VIP</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="label" for="espacioEstado">Estado inicial</label>
+        <select class="input" id="espacioEstado">
+          <option value="available">Disponible</option>
+          <option value="occupied">Ocupado</option>
+          <option value="disabled">Deshabilitado</option>
+        </select>
+      </div>
+
+      <button class="btn btn--primary btn--full" id="btnGuardarEspacio">Guardar espacio</button>
+    </div>
+  </div>
+
+
+  <!-- =============================================
+       NOTIFICACIONES TOAST
+       Mensajes temporales de retroalimentacion
+  ============================================= -->
+  <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+
+  <!-- =============================================
+       PIE DE PAGINA
+  ============================================= -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <p class="footer__brand">ParkSmart &mdash; Sistema Inteligente de Gestión de Parqueaderos</p>
+      <p class="footer__info">Proyecto académico &mdash; Ingeniería de Software &mdash; UNIMINUTO 2026</p>
+    </div>
+  </footer>
+
+
+  <!-- Script principal de la aplicacion -->
+  <script src="app.js"></script>
+</body>
+</html>
